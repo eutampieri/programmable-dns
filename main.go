@@ -11,11 +11,10 @@ import (
 
 type handler struct{}
 
-//var defaultServer = DoTResolver{Server: "[2606:4700:4700::1112]:53"}
-var defaultServer = DoTResolver{Server: "1.1.1.1:853"}
+var defaultServer = DoTResolver{Server: "[2606:4700:4700::1112]:53"}
 
-var ipsToSrvs = map[string]string
-var hostnamesToSrvs = map[string]string
+var resolvers []ResolverMapping
+
 func reverse(numbers []string) []string {
 	for i := 0; i < len(numbers)/2; i++ {
 		j := len(numbers) - i - 1
@@ -30,29 +29,20 @@ func GetDNSServer(query string) Resolver {
 		pieces := reverse(strings.Split(query, "."))
 		query = strings.Join(pieces[:], ".")
 	}
-	println(query)
 	ip := net.ParseIP(query)
-	if ip != nil {
-		for ipRange, server := range ipsToSrvs {
-			_, ipNetwork, _ := net.ParseCIDR(ipRange)
+	for _, resolver := range resolvers {
+		if ip != nil {
+			_, ipNetwork, _ := net.ParseCIDR(resolver.Network)
 			if ipNetwork.Contains(ip) {
-				return server
+				return resolver.Resolver
 			}
-		}
-		return defaultServer
-	} else {
-		for hostname, server := range hostnamesToSrvs {
-			if strings.Contains(query, hostname) {
-				return server
-			}
-		}
-		if strings.Count(query, ".") > 1 {
-			return defaultServer
 		} else {
-			// Here we should check where the request came from, but we use the default resolver anyway
-			return defaultServer
+			if strings.Contains(query, resolver.Domain) {
+				return resolver.Resolver
+			}
 		}
 	}
+	return defaultServer
 }
 
 func (h *handler) ServeDNS(w dns.ResponseWriter, r *dns.Msg) {
@@ -67,7 +57,7 @@ func (h *handler) ServeDNS(w dns.ResponseWriter, r *dns.Msg) {
 }
 
 func main() {
-	srv := &dns.Server{Addr: ":" + strconv.Itoa(53), Net: "udp"}
+	srv := &dns.Server{Addr: ":" + strconv.Itoa(5353), Net: "udp"}
 	srv.Handler = &handler{}
 	if err := srv.ListenAndServe(); err != nil {
 		log.Fatalf("Failed to set udp listener %s\n", err.Error())
