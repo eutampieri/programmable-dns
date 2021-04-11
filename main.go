@@ -57,7 +57,7 @@ func (h *handler) ServeDNS(w dns.ResponseWriter, r *dns.Msg) {
 }
 
 func main() {
-	srv := &dns.Server{Addr: ":" + strconv.Itoa(5353), Net: "udp"}
+	srv := &dns.Server{Addr: "127.0.0.1:" + strconv.Itoa(5354), Net: "udp"}
 	srv.Handler = &handler{}
 	if err := srv.ListenAndServe(); err != nil {
 		log.Fatalf("Failed to set udp listener %s\n", err.Error())
