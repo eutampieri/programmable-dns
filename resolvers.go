@@ -41,8 +41,8 @@ func (s StaticResolver) Resolve(q *dns.Msg) (*dns.Msg, error) {
 	switch q.Question[0].Qtype {
 	case dns.TypeA:
 		msg.Authoritative = true
-		domain := msg.Question[0].Name
-		address, ok := s.DomainsToIPs[domain]
+		domain := strings.ReplaceAll(q.Question[0].Name, s.Base+".", "")
+		address, ok := s.DomainsToIPs[domain+"."+s.Base]
 		if ok {
 			msg.Answer = append(msg.Answer, &dns.A{
 				Hdr: dns.RR_Header{Name: domain, Rrtype: dns.TypeA, Class: dns.ClassINET, Ttl: 60},

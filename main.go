@@ -11,7 +11,7 @@ import (
 
 type handler struct{}
 
-var defaultServer = DoTResolver{Server: "[2606:4700:4700::1112]:53"}
+var defaultServer = DoTResolver{Server: "[2606:4700:4700::1111]:853"}
 
 var resolvers []ResolverMapping
 
