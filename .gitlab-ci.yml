@@ -15,6 +15,6 @@ before_script:
   - go get -v -d ./...
 
 build:
-  stage: test
+  stage: build
   script:
     - GOOS=linux GOARCH=arm GOARM=7 go build *.go
