@@ -8,13 +8,8 @@ variables:
 stages:
  - build
 
-before_script:
-  - mkdir -p $GOPATH/src/$REPO/$GROUP $GOPATH/src/_/builds
-  - cp -r $CI_PROJECT_DIR $GOPATH/src/$REPO/$GROUP/$PROJECT
-  - ln -s $GOPATH/src/$REPO/$GROUP $GOPATH/src/_/builds/$GROUP
-  - go get -v -d ./...
-
 build:
   stage: build
   script:
+    - go get -v -d ./...
     - GOOS=linux GOARCH=arm GOARM=7 go build *.go
