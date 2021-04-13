@@ -13,3 +13,9 @@ build:
   script:
     - go get
     - GOOS=linux GOARCH=arm GOARM=7 go build *.go
+    - mv main dns_resolver
+  artifacts:
+    paths:
+      - dns_resolver
+    expire_in: 1 week
+

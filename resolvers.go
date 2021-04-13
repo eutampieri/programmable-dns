@@ -73,3 +73,39 @@ type ResolverMapping struct {
 	Domain   string
 	Network  string
 }
+
+type SuffixResolver struct {
+	Server string
+	Suffix string
+}
+
+func (s SuffixResolver) Resolve(q *dns.Msg) (*dns.Msg, error) {
+	for i := range q.Question {
+		q.Question[i].Name = strings.ReplaceAll(q.Question[i].Name, s.Suffix, "")
+	}
+	ans, err := dns.Exchange(q, s.Server)
+	if err != nil {
+		return nil, err
+	}
+	if q.Question[0].Qtype == dns.TypePTR {
+		oldAnswers := ans.Answer
+		ans.Answer = make([]dns.RR, len(oldAnswers))
+		for i := range oldAnswers {
+			if t, ok := oldAnswers[0].(*dns.PTR); ok {
+				ans.Answer = append(ans.Answer, &dns.PTR{
+					Hdr: *oldAnswers[i].Header(),
+					Ptr: t.Ptr + s.Suffix,
+				})
+			}
+		}
+	} else {
+		for i := range ans.Question {
+			ans.Question[i].Name += s.Suffix
+		}
+		for i := range ans.Answer {
+			ans.Answer[i].Header().Name += s.Suffix
+		}
+	}
+	print(ans.String())
+	return ans, nil
+}
