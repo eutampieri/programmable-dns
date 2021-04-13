@@ -11,5 +11,4 @@ stages:
 build:
   stage: build
   script:
-    - go get -v -d ./...
     - GOOS=linux GOARCH=arm GOARM=7 go build *.go
