@@ -1,4 +1,4 @@
-image: golang:1.12.6
+image: golang:latest
 
 variables:
   REPO: gitlab.com
