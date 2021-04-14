@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"log"
 	"net"
 	"strconv"
@@ -10,8 +11,6 @@ import (
 )
 
 type handler struct{}
-
-var defaultServer = MakeDoTResolver("[2606:4700:4700::1111]:853")
 
 var resolvers []ResolverMapping
 
@@ -23,7 +22,7 @@ func reverse(numbers []string) []string {
 	return numbers
 }
 
-func GetDNSServer(query string) Resolver {
+func GetDNSServer(query string) (Resolver, error) {
 	if strings.Contains(query, ".in-addr.arpa.") {
 		query = strings.ReplaceAll(query, ".in-addr.arpa.", "")
 		pieces := reverse(strings.Split(query, "."))
@@ -34,30 +33,64 @@ func GetDNSServer(query string) Resolver {
 		if ip != nil {
 			_, ipNetwork, _ := net.ParseCIDR(resolver.Network)
 			if ipNetwork.Contains(ip) {
-				return resolver.Resolver
+				return resolver.Resolver, nil
 			}
 		} else {
 			if strings.Contains(query, resolver.Domain) {
-				return resolver.Resolver
+				return resolver.Resolver, nil
 			}
 		}
 	}
-	return &defaultServer
+	return nil, errors.New("zone not found")
 }
 
 func (h *handler) ServeDNS(w dns.ResponseWriter, r *dns.Msg) {
 	domain := r.Question[0].Name
-	server := GetDNSServer(domain)
-	in, err := server.Resolve(r)
-	if err != nil {
-		println(err.Error())
+	server, err := GetDNSServer(domain)
+	if err == nil {
+		in, err := server.Resolve(r)
+		if err != nil {
+			println(err.Error())
+		} else {
+			err := w.WriteMsg(in)
+			if err != nil {
+				println(err.Error())
+			}
+		}
 	} else {
-		w.WriteMsg(in)
+		response := emptyDnsResponse(r)
+		err := w.WriteMsg(&response)
+		if err != nil {
+			println(err.Error())
+		}
+	}
+}
+
+func emptyDnsResponse(r *dns.Msg) dns.Msg {
+	return dns.Msg{
+		MsgHdr: dns.MsgHdr{
+			Id:                 r.Id,
+			Response:           true,
+			Opcode:             r.Opcode,
+			Authoritative:      false,
+			Truncated:          false,
+			RecursionDesired:   r.RecursionDesired,
+			RecursionAvailable: false,
+			Zero:               false,
+			AuthenticatedData:  false,
+			CheckingDisabled:   false,
+			Rcode:              2,
+		},
+		Compress: false,
+		Question: r.Question,
+		Answer:   []dns.RR{},
+		Ns:       nil,
+		Extra:    nil,
 	}
 }
 
 func main() {
-	srv := &dns.Server{Addr: "127.0.0.1:" + strconv.Itoa(5354), Net: "udp"}
+	srv := &dns.Server{Addr: "0.0.0.0:" + strconv.Itoa(5354), Net: "udp"}
 	srv.Handler = &handler{}
 	if err := srv.ListenAndServe(); err != nil {
 		log.Fatalf("Failed to set udp listener %s\n", err.Error())

@@ -81,36 +81,51 @@ type ResolverMapping struct {
 }
 
 type SuffixResolver struct {
-	Server string
-	Suffix string
+	Server    string
+	NewSuffix string
+	OldSuffix string
 }
 
 func (s SuffixResolver) Resolve(q *dns.Msg) (*dns.Msg, error) {
 	for i := range q.Question {
-		q.Question[i].Name = strings.ReplaceAll(q.Question[i].Name, s.Suffix, "")
+		q.Question[i].Name = strings.ReplaceAll(q.Question[i].Name, s.NewSuffix, s.OldSuffix)
 	}
 	ans, err := dns.Exchange(q, s.Server)
 	if err != nil {
 		return nil, err
 	}
 	if q.Question[0].Qtype == dns.TypePTR {
-		oldAnswers := ans.Answer
-		ans.Answer = make([]dns.RR, len(oldAnswers))
-		for i := range oldAnswers {
-			if t, ok := oldAnswers[0].(*dns.PTR); ok {
-				ans.Answer = append(ans.Answer, &dns.PTR{
-					Hdr: *oldAnswers[i].Header(),
-					Ptr: t.Ptr + s.Suffix,
-				})
+		for i := range ans.Answer {
+			if t, ok := ans.Answer[0].(*dns.PTR); ok {
+				oldA := ans.Answer[i]
+				ans.Answer[i] = &dns.PTR{
+					Hdr: *oldA.Header(),
+					Ptr: strings.ReplaceAll(t.Ptr, s.OldSuffix, s.NewSuffix),
+				}
 			}
 		}
 	} else {
 		for i := range ans.Question {
-			ans.Question[i].Name += s.Suffix
+			ans.Question[i].Name = strings.ReplaceAll(ans.Question[i].Name, s.OldSuffix, s.NewSuffix)
 		}
 		for i := range ans.Answer {
-			ans.Answer[i].Header().Name += s.Suffix
+			ans.Question[i].Name = strings.ReplaceAll(ans.Answer[i].Header().Name, s.OldSuffix, s.NewSuffix)
 		}
 	}
 	return ans, nil
+}
+
+type MergeResolver struct {
+	Resolvers []Resolver
+}
+
+func (s MergeResolver) Resolve(q *dns.Msg) (*dns.Msg, error) {
+	for _, r := range s.Resolvers {
+		ans, err := r.Resolve(q)
+		if err == nil && len(ans.Answer) > 0 {
+			return ans, nil
+		}
+	}
+	response := emptyDnsResponse(q)
+	return &response, nil
 }
