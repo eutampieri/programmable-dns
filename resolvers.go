@@ -21,13 +21,19 @@ func (b BasicResolver) Resolve(q *dns.Msg) (*dns.Msg, error) {
 
 type DoTResolver struct {
 	Server string
+	Client *dns.Client
 }
 
 func (t DoTResolver) Resolve(q *dns.Msg) (*dns.Msg, error) {
+	response, _, err := t.Client.Exchange(q, t.Server)
+	return response, err
+}
+
+func MakeDoTResolver(server string) DoTResolver {
 	c := new(dns.Client)
 	c.Net = "tcp-tls"
-	response, _, err := c.Exchange(q, t.Server)
-	return response, err
+	c.SingleInflight = true
+	return DoTResolver{Server: server, Client: c}
 }
 
 type StaticResolver struct {
@@ -106,6 +112,5 @@ func (s SuffixResolver) Resolve(q *dns.Msg) (*dns.Msg, error) {
 			ans.Answer[i].Header().Name += s.Suffix
 		}
 	}
-	print(ans.String())
 	return ans, nil
 }

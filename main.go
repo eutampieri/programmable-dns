@@ -11,7 +11,7 @@ import (
 
 type handler struct{}
 
-var defaultServer = DoTResolver{Server: "[2606:4700:4700::1111]:853"}
+var defaultServer = MakeDoTResolver("[2606:4700:4700::1111]:853")
 
 var resolvers []ResolverMapping
 
@@ -42,7 +42,7 @@ func GetDNSServer(query string) Resolver {
 			}
 		}
 	}
-	return defaultServer
+	return &defaultServer
 }
 
 func (h *handler) ServeDNS(w dns.ResponseWriter, r *dns.Msg) {
