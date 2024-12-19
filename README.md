@@ -7,6 +7,7 @@ This project is a DNS resolver that supports various types of DNS resolution str
 ## Features
 
 - **Basic Resolver**: Resolves DNS queries using a specified DNS server.
+- **DoT Resolver**: Resolves DNS queries using a specified DoT server.
 - **Static Resolver**: Maps domain names to IP addresses based on a static configuration.
 - **Suffix Resolver**: Modifies DNS queries and responses based on specified suffixes.
 - **Merge Resolver**: Combines multiple resolvers and returns the first successful response.
@@ -73,8 +74,8 @@ The configuration for the DNS resolver is defined in a JSON format. Below is a s
 - **network**: The CIDR notation of the network.
 - **domain**: The domain name associated with the resolver.
 - **resolver**: An object defining the type of resolver and its specific settings.
-  - **type**: The type of resolver (e.g., `basic`, `static`, `suffix`, `merge`).
-  - **server**: The DNS server to query (for `basic` and `suffix` resolvers).
+  - **type**: The type of resolver (e.g., `basic`, `static`, `suffix`, `merge`, `dot`).
+  - **server**: The DNS server to query (for `basic`, `dot` and `suffix` resolvers).
   - **oldSuffix**: The suffix to be replaced in DNS queries (for `suffix` resolvers).
   - **newSuffix**: The new suffix to be used in DNS queries (for `suffix` resolvers).
   - **base**: The base domain for static resolution (for `static` resolvers).
