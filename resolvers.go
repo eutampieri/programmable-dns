@@ -12,7 +12,7 @@ type Resolver interface {
 }
 
 type BasicResolver struct {
-	Server string
+	Server string `json:"server"`
 }
 
 func (b BasicResolver) Resolve(q *dns.Msg) (*dns.Msg, error) {
@@ -37,8 +37,8 @@ func MakeDoTResolver(server string) DoTResolver {
 }
 
 type StaticResolver struct {
-	DomainsToIPs map[string]string
-	Base         string
+	DomainsToIPs map[string]string `json:"domainsToIPs"`
+	Base         string            `json:"base"`
 }
 
 func (s StaticResolver) Resolve(q *dns.Msg) (*dns.Msg, error) {
@@ -81,9 +81,9 @@ type ResolverMapping struct {
 }
 
 type SuffixResolver struct {
-	Server    string
-	NewSuffix string
-	OldSuffix string
+	Server    string `json:"server"`
+	NewSuffix string `json:"newSuffix"`
+	OldSuffix string `json:"oldSuffix"`
 }
 
 func (s SuffixResolver) Resolve(q *dns.Msg) (*dns.Msg, error) {

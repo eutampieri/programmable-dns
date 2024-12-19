@@ -36,7 +36,7 @@ func GetDNSServer(query string) (Resolver, error) {
 				return resolver.Resolver, nil
 			}
 		} else {
-			if strings.Contains(query, resolver.Domain) {
+			if resolver.Domain != "" && strings.Contains(query, resolver.Domain) {
 				return resolver.Resolver, nil
 			}
 		}
@@ -90,6 +90,11 @@ func emptyDnsResponse(r *dns.Msg) dns.Msg {
 }
 
 func main() {
+	conf, err := LoadConfiguration("config.json")
+	if err != nil {
+		log.Fatal(err)
+	}
+	resolvers = conf
 	srv := &dns.Server{Addr: "0.0.0.0:" + strconv.Itoa(5354), Net: "udp"}
 	srv.Handler = &handler{}
 	if err := srv.ListenAndServe(); err != nil {
