@@ -13,7 +13,7 @@ build:
   script:
     - go get
     - GOOS=linux GOARCH=arm GOARM=7 go build *.go
-    - mv main dns_resolver
+    - mv config dns_resolver
   artifacts:
     paths:
       - dns_resolver
