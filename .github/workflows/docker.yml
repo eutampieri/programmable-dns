@@ -9,9 +9,6 @@ on:
   push:
     branches:
       - master
-    paths:
-      - tools/on_off_detection/**
-      - .github/workflows/docker_fetch.yml
 jobs:
   docker:
     runs-on: ubuntu-latest
