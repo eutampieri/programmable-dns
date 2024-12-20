@@ -109,7 +109,7 @@ func (s SuffixResolver) Resolve(q *dns.Msg) (*dns.Msg, error) {
 			ans.Question[i].Name = strings.ReplaceAll(ans.Question[i].Name, s.OldSuffix, s.NewSuffix)
 		}
 		for i := range ans.Answer {
-			ans.Answer[i].Name = strings.ReplaceAll(ans.Answer[i].Header().Name, s.OldSuffix, s.NewSuffix)
+			ans.Answer[i].Header().Name = strings.ReplaceAll(ans.Answer[i].Header().Name, s.OldSuffix, s.NewSuffix)
 		}
 	}
 	return ans, nil
